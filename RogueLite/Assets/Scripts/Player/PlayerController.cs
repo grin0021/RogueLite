@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class PlayerController : MonoBehaviour
@@ -12,6 +13,15 @@ public class PlayerController : MonoBehaviour
 
     [Tooltip("Player sprite renderer")]
     public SpriteRenderer Sprite;
+
+    float m_speedMultiplier = 1.0f;
+
+    float m_attackTimer = 0.0f;
+
+    bool m_attack1 = false;
+    bool m_attack2 = false;
+    bool m_attack3 = false;
+    bool m_attackEnd = false;
 
     Rigidbody2D m_rigidBody;
     Animator m_animator;
@@ -43,6 +53,13 @@ public class PlayerController : MonoBehaviour
         {
             Jump();
         }
+
+        if (Input.GetKeyDown(KeyCode.Mouse0))
+        {
+            Attack();
+        }
+
+        HandleAttackTimer();
     }
 
     void MoveLeft()
@@ -60,7 +77,7 @@ public class PlayerController : MonoBehaviour
 
         Vector3 dir = new Vector3(-1.0f, 0.0f, 0.0f);
 
-        transform.position += dir * PlayerSpeed * Time.deltaTime;
+        transform.position += dir * PlayerSpeed * m_speedMultiplier * Time.deltaTime;
     }
 
     void MoveRight()
@@ -77,7 +94,7 @@ public class PlayerController : MonoBehaviour
 
         Vector3 dir = new Vector3(1.0f, 0.0f, 0.0f);
 
-        transform.position += dir * PlayerSpeed * Time.deltaTime;
+        transform.position += dir * PlayerSpeed * m_speedMultiplier * Time.deltaTime;
     }
 
     void Jump()
@@ -97,6 +114,50 @@ public class PlayerController : MonoBehaviour
         m_rigidBody.AddForce(force);
     }
 
+    void Attack()
+    {
+        if (!m_animator.GetBool("bIsJumping"))
+        {
+            if (!m_attack1 && !m_attack2 && !m_attack3)
+            {
+                m_attack1 = true;
+                m_animator.SetBool("Attack1", true);
+                m_speedMultiplier = 0.25f;
+            }
+            else if (m_attack1 && !m_attack2 && m_attackTimer > 0.75f)
+            {
+                m_attack2 = true;
+                m_attack1 = false;
+
+                m_animator.SetBool("Attack2", true);
+
+                m_attackTimer = 0.0f;
+            }
+            else if (m_attack2 && !m_attack3 && m_attackTimer > 0.75f)
+            {
+                m_attack3 = true;
+                m_attack2 = false;
+
+                m_animator.SetBool("Attack3", true);
+
+                m_attackTimer = 0.0f;
+            }
+        }
+    }
+
+    void HandleAttackTimer()
+    {
+        if (m_attack1 || m_attack2 || m_attack3)
+        {
+            m_attackTimer += Time.deltaTime;
+        }
+
+        if (m_attack3 && m_attackTimer >= 0.5f)
+        {
+            m_attackEnd = true;
+        }
+    }
+
     private void OnCollisionEnter2D(Collision2D collision)
     {
         if (collision.gameObject.layer == LayerMask.NameToLayer("Floor"))
@@ -106,5 +167,33 @@ public class PlayerController : MonoBehaviour
                 m_animator.SetBool("bIsJumping", false);
             }
         }
+    }
+
+    public void ResetAttack()
+    {
+        if (m_attack1 && !m_attack2)
+        {
+            m_attack1 = false;
+
+            m_animator.SetBool("Attack1", false);
+        }
+        else if (m_attack2 && !m_attack3)
+        {
+            m_attack2 = false;
+
+            m_animator.SetBool("Attack2", false);
+            m_animator.SetBool("Attack1", false);
+        }
+        else if (m_attackEnd)
+        {
+            m_attack3 = false;
+
+            m_animator.SetBool("Attack3", false);
+            m_animator.SetBool("Attack2", false);
+            m_animator.SetBool("Attack1", false);
+        }
+
+        m_speedMultiplier = 1.0f;
+        m_attackTimer = 0.0f;
     }
 }
