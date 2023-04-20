@@ -14,11 +14,13 @@ public class PlayerController : MonoBehaviour
     public SpriteRenderer Sprite;
 
     Rigidbody2D m_rigidBody;
+    Animator m_animator;
 
     // Start is called before the first frame update
     void Start()
     {
         m_rigidBody = GetComponent<Rigidbody2D>();
+        m_animator = GetComponent<Animator>();
     }
 
     // Update is called once per frame
@@ -28,10 +30,13 @@ public class PlayerController : MonoBehaviour
         {
             MoveLeft();
         }
-
-        if (Input.GetKey(KeyCode.D))
+        else if (Input.GetKey(KeyCode.D))
         {
             MoveRight();
+        }
+        else if (m_animator.GetBool("bIsRunning"))
+        {
+            m_animator.SetBool("bIsRunning", false);
         }
 
         if (Input.GetKeyDown(KeyCode.Space))
@@ -42,10 +47,16 @@ public class PlayerController : MonoBehaviour
 
     void MoveLeft()
     {
+        if (!m_animator.GetBool("bIsRunning"))
+        {
+            m_animator.SetBool("bIsRunning", true);
+        }
+
         if (!Sprite.flipX)
         {
             Sprite.flipX = true;
         }
+
 
         Vector3 dir = new Vector3(-1.0f, 0.0f, 0.0f);
 
@@ -54,6 +65,11 @@ public class PlayerController : MonoBehaviour
 
     void MoveRight()
     {
+        if (!m_animator.GetBool("bIsRunning"))
+        {
+            m_animator.SetBool("bIsRunning", true);
+        }
+
         if (Sprite.flipX)
         {
             Sprite.flipX = false;
@@ -66,8 +82,29 @@ public class PlayerController : MonoBehaviour
 
     void Jump()
     {
+        if (m_animator.GetBool("bIsRunning"))
+        {
+            m_animator.SetBool("bIsRunning", false);
+        }
+
+        if (!m_animator.GetBool("bIsJumping"))
+        {
+            m_animator.SetBool("bIsJumping", true);
+        }
+
         Vector2 force = new Vector2(0.0f, JumpPower);
 
         m_rigidBody.AddForce(force);
+    }
+
+    private void OnCollisionEnter2D(Collision2D collision)
+    {
+        if (collision.gameObject.layer == LayerMask.NameToLayer("Floor"))
+        {
+            if (m_animator.GetBool("bIsJumping"))
+            {
+                m_animator.SetBool("bIsJumping", false);
+            }
+        }
     }
 }
