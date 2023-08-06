@@ -196,4 +196,9 @@ public class PlayerController : MonoBehaviour
         m_speedMultiplier = 1.0f;
         m_attackTimer = 0.0f;
     }
+
+    private void OnTriggerEnter2D(Collider2D collision)
+    {
+        Debug.Log(collision.name);
+    }
 }
