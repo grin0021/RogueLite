@@ -49,7 +49,7 @@ public abstract class BaseEnemy : MonoBehaviour
     }
 
     // Update is called once per frame
-    protected void Update()
+    virtual protected void Update()
     {
         if (m_currentHealth <= 0.0f)
         {
