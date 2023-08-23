@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using Unity.VisualScripting;
 using UnityEngine;
 
@@ -16,6 +17,12 @@ public class PlayerController : MonoBehaviour
 
     [Tooltip("Player sprite renderer")]
     public SpriteRenderer Sprite;
+
+    [Tooltip("Amount of damage player deals")]
+    [SerializeField] protected float DamageFactor;
+
+    [SerializeField] protected BoxCollider2D m_leftHitBox;
+    [SerializeField] protected BoxCollider2D m_rightHitBox;
 
     float m_currentHealth;
 
@@ -43,30 +50,58 @@ public class PlayerController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (Input.GetKey(KeyCode.A))
+        if (!m_animator.GetBool("Stun"))
         {
-            MoveLeft();
-        }
-        else if (Input.GetKey(KeyCode.D))
-        {
-            MoveRight();
-        }
-        else if (m_animator.GetBool("bIsRunning"))
-        {
-            m_animator.SetBool("bIsRunning", false);
-        }
+            if (Input.GetKey(KeyCode.A))
+            {
+                MoveLeft();
+            }
+            else if (Input.GetKey(KeyCode.D))
+            {
+                MoveRight();
+            }
+            else if (m_animator.GetBool("bIsRunning"))
+            {
+                m_animator.SetBool("bIsRunning", false);
+            }
 
-        if (Input.GetKeyDown(KeyCode.Space))
-        {
-            Jump();
-        }
+            if (Input.GetKeyDown(KeyCode.Space))
+            {
+                Jump();
+            }
 
-        if (Input.GetKeyDown(KeyCode.Mouse0))
-        {
-            Attack();
+            if (Input.GetKeyDown(KeyCode.Mouse0))
+            {
+                Attack();
+            }
         }
 
         HandleAttackTimer();
+    }
+
+    void EnableHitBox()
+    {
+        if (Sprite.flipX)
+        {
+            m_leftHitBox.enabled = true;
+        }
+        else
+        {
+            m_rightHitBox.enabled = true;
+        }
+    }
+
+    void DisableHitBox()
+    {
+        if (m_leftHitBox.enabled)
+        {
+            m_leftHitBox.enabled = false;
+        }
+
+        if (m_rightHitBox.enabled)
+        {
+            m_rightHitBox.enabled = false;
+        }
     }
 
     void MoveLeft()
@@ -165,17 +200,6 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    private void OnCollisionEnter2D(Collision2D collision)
-    {
-        if (collision.gameObject.layer == LayerMask.NameToLayer("Floor"))
-        {
-            if (m_animator.GetBool("bIsJumping"))
-            {
-                m_animator.SetBool("bIsJumping", false);
-            }
-        }
-    }
-
     public void ResetAttack()
     {
         if (m_attack1 && !m_attack2)
@@ -209,13 +233,27 @@ public class PlayerController : MonoBehaviour
         m_currentHealth -= damage;
 
         m_rigidBody.AddForce(dir * 200.0f);
+
+        m_animator.SetBool("Stun", true);
+
+        ResetAttack();
+        m_leftHitBox.enabled = false;
+        m_rightHitBox.enabled = false;
+
+        m_animator.SetBool("bIsJumping", false);
+        m_animator.SetBool("bIsRunning", false);
+    }
+
+    public float GetDamageFactor()
+    {
+        return DamageFactor;
     }
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
-        if (collision.gameObject.layer == LayerMask.NameToLayer("Enemy"))
+        if (collision.gameObject.layer == LayerMask.NameToLayer("EnemyAttack"))
         {
-            BaseEnemy enemy = collision.gameObject.GetComponent<BaseEnemy>();
+            BaseEnemy enemy = collision.gameObject.GetComponentInParent<BaseEnemy>();
 
             if (enemy)
             {
@@ -227,7 +265,21 @@ public class PlayerController : MonoBehaviour
                 dir.Normalize();
 
                 TakeDamage(enemy.GetDamageFactor(), dir);
-                Debug.Log(m_currentHealth);
+            }
+        }
+    }
+
+    private void OnCollisionEnter2D(Collision2D collision)
+    {
+        if (collision.gameObject.layer == LayerMask.NameToLayer("Floor"))
+        {
+            if (m_animator.GetBool("bIsJumping"))
+            {
+                m_animator.SetBool("bIsJumping", false);
+            }
+            else if (m_animator.GetBool("Stun"))
+            {
+                m_animator.SetBool("Stun", false);
             }
         }
     }
