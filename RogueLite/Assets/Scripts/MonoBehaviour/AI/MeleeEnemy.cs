@@ -20,7 +20,7 @@ public class MeleeEnemy : BaseEnemy
     }
 
     // Update is called once per frame
-    void Update()
+    override protected void Update()
     {
         base.Update();
 
