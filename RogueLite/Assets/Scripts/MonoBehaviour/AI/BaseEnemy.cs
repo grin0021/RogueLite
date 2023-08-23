@@ -20,6 +20,9 @@ public abstract class BaseEnemy : MonoBehaviour
     [Tooltip("Attack rate of enemy")]
     [SerializeField] protected float AttackRate;                // Rate at which enemy can attack player
 
+    [Tooltip("Damage dealt to player")]
+    [SerializeField] protected float Damage;
+
     [Tooltip("Enemy health")]
     public float MaxHealth;                                     // Maximum health of the enemy
 
@@ -52,6 +55,11 @@ public abstract class BaseEnemy : MonoBehaviour
     public void TakeDamage(float damage)
     {
         m_currentHealth -= damage;
+    }
+
+    public float GetDamageFactor()
+    {
+        return Damage;
     }
 
     public abstract void MoveToTarget();

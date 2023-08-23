@@ -5,6 +5,9 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
+    [Tooltip("Player maximum health")]
+    public float MaxHealth;
+
     [Tooltip("Player movement speed")]
     public float PlayerSpeed = 10.0f;
 
@@ -13,6 +16,8 @@ public class PlayerController : MonoBehaviour
 
     [Tooltip("Player sprite renderer")]
     public SpriteRenderer Sprite;
+
+    float m_currentHealth;
 
     float m_speedMultiplier = 1.0f;
 
@@ -31,6 +36,8 @@ public class PlayerController : MonoBehaviour
     {
         m_rigidBody = GetComponent<Rigidbody2D>();
         m_animator = GetComponent<Animator>();
+
+        m_currentHealth = MaxHealth;
     }
 
     // Update is called once per frame
@@ -197,8 +204,31 @@ public class PlayerController : MonoBehaviour
         m_attackTimer = 0.0f;
     }
 
+    void TakeDamage(float damage, Vector2 dir)
+    {
+        m_currentHealth -= damage;
+
+        m_rigidBody.AddForce(dir * 200.0f);
+    }
+
     private void OnTriggerEnter2D(Collider2D collision)
     {
-        Debug.Log(collision.name);
+        if (collision.gameObject.layer == LayerMask.NameToLayer("Enemy"))
+        {
+            BaseEnemy enemy = collision.gameObject.GetComponent<BaseEnemy>();
+
+            if (enemy)
+            {
+                Transform enemyTransform = collision.gameObject.transform;
+
+                Vector3 dir = transform.position - enemyTransform.position;
+                dir.z = 0.0f;
+                dir.y = 1.0f;
+                dir.Normalize();
+
+                TakeDamage(enemy.GetDamageFactor(), dir);
+                Debug.Log(m_currentHealth);
+            }
+        }
     }
 }
