@@ -249,7 +249,7 @@ MonoBehaviour:
   PlayerSpeed: 5
   JumpPower: 300
   Sprite: {fileID: 180836829}
-  DamageFactor: 0
+  DamageFactor: 40
   m_leftHitBox: {fileID: 577833478}
   m_rightHitBox: {fileID: 225592262}
 --- !u!61 &180836832
