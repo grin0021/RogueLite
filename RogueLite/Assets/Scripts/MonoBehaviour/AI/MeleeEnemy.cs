@@ -22,7 +22,12 @@ public class MeleeEnemy : BaseEnemy
     // Update is called once per frame
     void Update()
     {
-        MoveToTarget();
+        base.Update();
+
+        if (!m_animator.GetBool("Stun"))
+        {
+            MoveToTarget();
+        }
     }
 
     void EnableHitBox()
@@ -47,6 +52,11 @@ public class MeleeEnemy : BaseEnemy
         {
             m_rightHitBox.enabled = false;
         }
+    }
+
+    void EndAttackState()
+    {
+        m_animator.SetBool("bIsAttacking", false);
     }
 
     public override void MoveToTarget()
@@ -96,5 +106,39 @@ public class MeleeEnemy : BaseEnemy
     public override void DetectPlayer()
     {
 
+    }
+
+    private void OnTriggerEnter2D(Collider2D collision)
+    {
+        if (collision.gameObject.layer == LayerMask.NameToLayer("PlayerAttack"))
+        {
+            PlayerController player = collision.gameObject.GetComponentInParent<PlayerController>();
+
+            if (player)
+            {
+                Transform playerTransform = collision.gameObject.transform;
+
+                Vector3 dir = transform.position - playerTransform.position;
+                dir.z = 0.0f;
+                dir.y = 1.0f;
+                dir.Normalize();
+
+                TakeDamage(player.GetDamageFactor(), dir);
+                m_animator.SetBool("Stun", true);
+                m_animator.SetBool("bIsAttacking", false);
+                DisableHitBox();
+            }
+        }
+    }
+
+    private void OnCollisionEnter2D(Collision2D collision)
+    {
+        if (collision.gameObject.layer == LayerMask.NameToLayer("Floor"))
+        {
+            if (m_animator.GetBool("Stun"))
+            {
+                m_animator.SetBool("Stun", false);
+            }
+        }
     }
 }
