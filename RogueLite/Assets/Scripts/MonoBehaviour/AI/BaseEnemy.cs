@@ -29,6 +29,7 @@ public abstract class BaseEnemy : MonoBehaviour
     protected Animator m_animator;                              // Animator component attached to game object
     protected SpriteRenderer m_sprite;                          // SpriteRenderer component attached to game object
     protected Transform m_target;                               // Target transfor for enemy to move towards
+    protected Rigidbody2D m_rigidBody;
     protected float m_attackTimer;                              // Compliments attack timer to implement attack rate
     protected float m_currentHealth;                            // Current health value of the enemy
     protected bool bCanSeePlayer;                               // Can enemy see the player
@@ -44,17 +45,22 @@ public abstract class BaseEnemy : MonoBehaviour
 
         m_sprite = GetComponent<SpriteRenderer>();
         m_animator = GetComponent<Animator>();
+        m_rigidBody = GetComponent<Rigidbody2D>();
     }
 
     // Update is called once per frame
-    void Update()
+    protected void Update()
     {
-        
+        if (m_currentHealth <= 0.0f)
+        {
+            Destroy(gameObject);
+        }
     }
 
-    public void TakeDamage(float damage)
+    public void TakeDamage(float damage, Vector2 dir)
     {
         m_currentHealth -= damage;
+        m_rigidBody.AddForce(dir * 200.0f);
     }
 
     public float GetDamageFactor()
