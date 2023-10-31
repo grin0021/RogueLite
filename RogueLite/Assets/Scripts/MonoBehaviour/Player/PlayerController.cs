@@ -33,7 +33,6 @@ public class PlayerController : MonoBehaviour
     bool m_attack1 = false;
     bool m_attack2 = false;
     bool m_attack3 = false;
-    bool m_attackEnd = false;
 
     Rigidbody2D m_rigidBody;
     Animator m_animator;
@@ -141,19 +140,23 @@ public class PlayerController : MonoBehaviour
 
     void Jump()
     {
-        if (m_animator.GetBool("bIsRunning"))
+        if ((!m_attack1 || !m_attack2 || !m_attack3) && m_attackTimer <= 0.25f)
         {
-            m_animator.SetBool("bIsRunning", false);
+            ResetAttack();
+
+            if (m_animator.GetBool("bIsRunning"))
+            {
+                m_animator.SetBool("bIsRunning", false);
+            }
+
+            if (!m_animator.GetBool("bIsJumping"))
+            {
+                m_animator.SetBool("bIsJumping", true);
+
+                Vector2 force = new Vector2(0.0f, JumpPower);
+                m_rigidBody.AddForce(force);
+            }
         }
-
-        if (!m_animator.GetBool("bIsJumping"))
-        {
-            m_animator.SetBool("bIsJumping", true);
-        }
-
-        Vector2 force = new Vector2(0.0f, JumpPower);
-
-        m_rigidBody.AddForce(force);
     }
 
     void Attack()
@@ -166,7 +169,7 @@ public class PlayerController : MonoBehaviour
                 m_animator.SetBool("Attack1", true);
                 m_speedMultiplier = 0.25f;
             }
-            else if (m_attack1 && !m_attack2 && m_attackTimer > 0.75f)
+            else if (m_attack1 && !m_attack2 && m_attackTimer > 0.5f)
             {
                 m_attack2 = true;
                 m_attack1 = false;
@@ -175,7 +178,7 @@ public class PlayerController : MonoBehaviour
 
                 m_attackTimer = 0.0f;
             }
-            else if (m_attack2 && !m_attack3 && m_attackTimer > 0.75f)
+            else if (m_attack2 && !m_attack3 && m_attackTimer > 0.5f)
             {
                 m_attack3 = true;
                 m_attack2 = false;
@@ -193,39 +196,22 @@ public class PlayerController : MonoBehaviour
         {
             m_attackTimer += Time.deltaTime;
         }
-
-        if (m_attack3 && m_attackTimer >= 0.5f)
-        {
-            m_attackEnd = true;
-        }
     }
 
     public void ResetAttack()
     {
-        if (m_attack1 && !m_attack2)
-        {
-            m_attack1 = false;
+        m_attack1 = false;
+        m_attack2 = false;
+        m_attack3 = false;
 
-            m_animator.SetBool("Attack1", false);
-        }
-        else if (m_attack2 && !m_attack3)
-        {
-            m_attack2 = false;
+        m_animator.SetBool("Attack1", false);
+        m_animator.SetBool("Attack2", false);
+        m_animator.SetBool("Attack3", false);
 
-            m_animator.SetBool("Attack2", false);
-            m_animator.SetBool("Attack1", false);
-        }
-        else if (m_attackEnd)
-        {
-            m_attack3 = false;
-
-            m_animator.SetBool("Attack3", false);
-            m_animator.SetBool("Attack2", false);
-            m_animator.SetBool("Attack1", false);
-        }
-
-        m_speedMultiplier = 1.0f;
         m_attackTimer = 0.0f;
+        m_speedMultiplier = 1.0f;
+
+        DisableHitBox();
     }
 
     void TakeDamage(float damage, Vector2 dir)
@@ -265,6 +251,16 @@ public class PlayerController : MonoBehaviour
                 dir.Normalize();
 
                 TakeDamage(enemy.GetDamageFactor(), dir);
+            }
+        }
+
+        if (collision.gameObject.layer == LayerMask.NameToLayer("Enemy"))
+        {
+            BaseEnemy enemy = collision.gameObject.GetComponentInParent<BaseEnemy>();
+
+            if (enemy)
+            {
+                enemy.DetectPlayer(transform);
             }
         }
     }
