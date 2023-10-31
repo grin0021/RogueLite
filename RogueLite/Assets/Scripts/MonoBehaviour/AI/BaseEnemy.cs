@@ -68,7 +68,11 @@ public abstract class BaseEnemy : MonoBehaviour
         return Damage;
     }
 
+    public void DetectPlayer(Transform player)
+    {
+        m_target = player;
+    }
+
     public abstract void MoveToTarget();
-    public abstract void DetectPlayer();
     public abstract void Attack();
 }
