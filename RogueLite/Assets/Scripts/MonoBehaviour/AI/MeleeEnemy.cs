@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Experimental.AI;
 
 /// <summary>
 /// The basic script class for a melee enemy
@@ -11,12 +12,33 @@ public class MeleeEnemy : BaseEnemy
     [SerializeField] protected BoxCollider2D m_leftHitBox;
     [SerializeField] protected BoxCollider2D m_rightHitBox;
 
+    List<Transform> PatrolPoints;
+
+    public GameObject PatrolPoint;
+
     // Start is called before the first frame update
     override protected void Start()
     {
         base.Start();
 
-        m_target = GameObject.Find("Player").transform;
+        GameObject point1 = Instantiate(PatrolPoint);
+        Vector3 pos1 = transform.position;
+        pos1.x -= 2.5f;
+        
+        point1.transform.position = pos1;
+
+        GameObject point2 = Instantiate(PatrolPoint);
+        Vector3 pos2 = transform.position;
+        pos2.x += 2.5f;
+
+        point2.transform.position = pos2;
+
+        PatrolPoints = new List<Transform>();
+
+        PatrolPoints.Add(point1.transform);
+        PatrolPoints.Add(point2.transform);
+
+        m_target = PatrolPoints[0];
     }
 
     // Update is called once per frame
@@ -84,16 +106,20 @@ public class MeleeEnemy : BaseEnemy
 
                 m_animator.SetBool("bIsRunning", true);
             }
-            else if (Mathf.Abs(dir.x) <= AttackRange && m_target.gameObject.name == "Player")
+            else if (Mathf.Abs(dir.x) <= AttackRange)
             {
-                if (m_attackTimer >= AttackRate)
+                if (m_target == PatrolPoints[0])
+                {
+                    m_target = PatrolPoints[1];
+                }
+                else if (m_target == PatrolPoints[1])
+                {
+                    m_target = PatrolPoints[0];
+                }
+                else if (m_target.gameObject.name == "Player")
                 {
                     Attack();
                 }
-            }
-            else
-            {
-
             }
         }
     }
@@ -103,10 +129,6 @@ public class MeleeEnemy : BaseEnemy
         m_animator.SetBool("bIsAttacking", true);
     }
 
-    public override void DetectPlayer()
-    {
-
-    }
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
@@ -114,7 +136,7 @@ public class MeleeEnemy : BaseEnemy
         {
             PlayerController player = collision.gameObject.GetComponentInParent<PlayerController>();
 
-            if (player)
+            if (player && !m_animator.GetBool("Stun"))
             {
                 Transform playerTransform = collision.gameObject.transform;
 
