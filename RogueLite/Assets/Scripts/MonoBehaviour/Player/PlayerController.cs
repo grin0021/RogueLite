@@ -254,7 +254,7 @@ public class PlayerController : MonoBehaviour
             }
         }
 
-        if (collision.gameObject.layer == LayerMask.NameToLayer("Enemy"))
+        if (collision.gameObject.layer == LayerMask.NameToLayer("EnemyDetection"))
         {
             BaseEnemy enemy = collision.gameObject.GetComponentInParent<BaseEnemy>();
 
