@@ -11,11 +11,11 @@ TagManager:
   - Floor
   - Water
   - UI
-  - 
-  - 
-  - 
-  - 
-  - 
+  - Enemy
+  - Player
+  - PlayerAttack
+  - EnemyAttack
+  - EnemyDetection
   - 
   - 
   - 
